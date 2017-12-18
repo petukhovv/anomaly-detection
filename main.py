@@ -6,8 +6,8 @@ from lib.DatasetLoader import DatasetLoader
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', '-f', nargs=1, type=str, help='dataset file (csv format with colon delimiter)')
-parser.add_argument('--split_percent', nargs=1, type=str, help='dataset train/test split percent')
-parser.add_argument('--encoding_dim_percent', '-o', nargs=1, type=str,
+parser.add_argument('--split_percent', nargs=1, type=float, help='dataset train/test split percent')
+parser.add_argument('--encoding_dim_percent', '-o', nargs=1, type=float,
                     help='encoding dim percent (towards features number)')
 
 args = parser.parse_args()
