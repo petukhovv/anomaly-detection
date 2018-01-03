@@ -12,6 +12,7 @@ parser.add_argument('--encoding_dim_percent', nargs=1, type=float,
                     help='encoding dim percent (towards features number)')
 parser.add_argument('--output_file', '-o', nargs=1, type=str,
                     help='file with decoding losses (difference between input and output)')
+parser.add_argument('--is_sort', '-s', action='store_true')
 
 args = parser.parse_args()
 
@@ -19,6 +20,7 @@ dataset_file = args.dataset[0]
 split_percent = args.split_percent[0]
 encoding_dim_percent = args.encoding_dim_percent[0]
 output_file = args.output_file[0]
+is_sort = args.is_sort
 
 data = DatasetLoader(dataset_file).load(split_percent=split_percent)
 (_, _, _, features_number) = data
@@ -32,4 +34,6 @@ predicted = autoencoder.predict()
 
 differences = autoencoder.calc_decoding_losses()
 with open(output_file, 'w') as f:
+    if is_sort:
+        differences = sorted(enumerate(differences), key=lambda tup: tup[1], reverse=True)
     f.write(json.dumps(differences))
