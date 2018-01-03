@@ -1,6 +1,7 @@
 from keras.layers import Input, Dense
 from keras.models import Model
-from keras.callbacks import Callback
+
+from scipy.spatial import distance
 
 
 class AutoencoderModel:
@@ -29,31 +30,41 @@ class AutoencoderModel:
     def get_autoencoder(self):
         return self.autoencoder
 
-
-class LossHistory(Callback):
-    def on_train_begin(self, logs={}):
-        self.losses = []
-
-    def on_batch_end(self, batch, logs={}):
-        self.losses.append(logs.get('loss'))
+    def get_decoder(self):
+        return self.decoder
 
 
 class Autoencoder:
-    def __init__(self, features_number, encoding_dim):
+    def __init__(self, features_number, encoding_dim, data):
         self.model = AutoencoderModel(features_number=features_number, encoding_dim=encoding_dim)
         self.model.compile()
-        self.history = None
+        self.predicted = None
+
+        (x_train, x_test, all_data, features_number) = data
+        self.train = x_train
+        self.test = x_test
+        self.all_data = all_data
+        self.features_number = features_number
 
     def print_model_summary(self):
         self.model.summary()
 
-    def fit(self, x_train, x_test, epochs=5, shuffle=True):
-        self.history = LossHistory()
-        self.model.get_autoencoder().fit(x_train, x_train,
+    def fit(self, epochs=5, shuffle=True):
+        self.model.get_autoencoder().fit(self.train, self.train,
                                          epochs=epochs,
                                          shuffle=shuffle,
-                                         validation_data=(x_test, x_test),
-                                         callbacks=[self.history])
+                                         validation_data=(self.all_data, self.all_data))
 
-    def get_losses(self):
-        return self.history.losses
+    def predict(self):
+        self.predicted = self.model.get_autoencoder().predict(self.all_data)
+
+    def calc_decoding_losses(self):
+        differences = []
+        item_index = 0
+        for item in self.predicted:
+            differences.append(
+                distance.euclidean(item, self.all_data[item_index])
+            )
+            item_index += 1
+
+        return differences
