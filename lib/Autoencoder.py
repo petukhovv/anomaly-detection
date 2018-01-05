@@ -1,3 +1,5 @@
+import numpy as np
+
 from keras.layers import Input, Dense
 from keras.models import Model
 
@@ -40,9 +42,8 @@ class Autoencoder:
         self.model.compile()
         self.predicted = None
 
-        (x_train, x_test, all_data, features_number) = data
-        self.train = x_train
-        self.test = x_test
+        (train_data, all_data, features_number) = data
+        self.train_data = train_data
         self.all_data = all_data
         self.features_number = features_number
 
@@ -50,7 +51,7 @@ class Autoencoder:
         self.model.summary()
 
     def fit(self, epochs=5, shuffle=True):
-        self.model.get_autoencoder().fit(self.train, self.train,
+        self.model.get_autoencoder().fit(self.train_data, self.train_data,
                                          epochs=epochs,
                                          shuffle=shuffle,
                                          validation_data=(self.all_data, self.all_data))
@@ -58,13 +59,16 @@ class Autoencoder:
     def predict(self):
         self.predicted = self.model.get_autoencoder().predict(self.all_data)
 
-    def calc_decoding_losses(self):
-        differences = []
+    def calc_differences(self, full_differences):
+        difference = []
         item_index = 0
+        samples_number = len(self.all_data)
         for item in self.predicted:
-            differences.append(
-                distance.euclidean(item, self.all_data[item_index])
-            )
+            if full_differences:
+                difference_element = np.divide(np.power(item - self.all_data[item_index], 2), samples_number)
+            else:
+                difference_element = distance.euclidean(item, self.all_data[item_index])
+            difference.append(difference_element)
             item_index += 1
 
-        return differences
+        return np.array(difference)

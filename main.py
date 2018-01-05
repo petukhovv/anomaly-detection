@@ -1,39 +1,90 @@
-import math
 import argparse
 import json
 
-from lib.Autoencoder import Autoencoder
-from lib.DatasetLoader import DatasetLoader
+from lib.helpers.TimeLogger import TimeLogger
+
+from autoencoding import autoencoding
+from anomaly_selection import anomaly_selection
+
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--stage', '-s', choices=['autoencoding', 'anomaly_selection', 'all'])
+parser.add_argument('--use_dbscan', action='store_true',
+                    help='whether to use dbscan (high memory usage);'
+                         'if not, then will use simple euclidean distance between input and output vector')
+
+# Autoencoding stage params
 parser.add_argument('--dataset', '-f', nargs=1, type=str, help='dataset file (csv format with colon delimiter)')
 parser.add_argument('--split_percent', nargs=1, type=float, help='dataset train/test split percent')
 parser.add_argument('--encoding_dim_percent', nargs=1, type=float,
                     help='encoding dim percent (towards features number)')
-parser.add_argument('--output_file', '-o', nargs=1, type=str,
+parser.add_argument('--differences_output_file', nargs=1, type=str,
                     help='file with decoding losses (difference between input and output)')
-parser.add_argument('--is_sort', '-s', action='store_true')
+
+# Anomaly selection stage params
+parser.add_argument('--distances_file', nargs=1, type=str,
+                    help='file with distance vectors (obtained by autoencoder)')
+parser.add_argument('--files_map_file', nargs=1, type=str,
+                    help='file with map dataset indexes and ast file paths')
+parser.add_argument('--anomalies_output_file', '-o', nargs=1, type=str,
+                    help='file, which will contain anomaly list (as paths to AST code snippets)')
 
 args = parser.parse_args()
+stage = args.stage
 
-dataset_file = args.dataset[0]
-split_percent = args.split_percent[0]
-encoding_dim_percent = args.encoding_dim_percent[0]
-output_file = args.output_file[0]
-is_sort = args.is_sort
+if stage == 'autoencoding':
+    dataset_file = args.dataset[0]
+    split_percent = args.split_percent[0]
+    encoding_dim_percent = args.encoding_dim_percent[0]
+    output_file = args.differences_output_file[0]
+    use_dbscan = args.use_dbscan
 
-data = DatasetLoader(dataset_file).load(split_percent=split_percent)
-(_, _, _, features_number) = data
+    total_time_logger = TimeLogger()
 
-encoding_dim = math.ceil(features_number * encoding_dim_percent)
+    autoencoding(dataset_file, split_percent, encoding_dim_percent, output_file, full_differences=use_dbscan)
 
-autoencoder = Autoencoder(features_number, encoding_dim, data)
-autoencoder.print_model_summary()
-autoencoder.fit()
-predicted = autoencoder.predict()
+    print('==============================')
+    print('Autoencoder finished its work. Time: ' + str(total_time_logger.finish()))
 
-differences = autoencoder.calc_decoding_losses()
-with open(output_file, 'w') as f:
-    if is_sort:
-        differences = sorted(enumerate(differences), key=lambda tup: tup[1], reverse=True)
-    f.write(json.dumps(differences))
+elif stage == 'anomaly_selection':
+    distances_file = args.distances_file[0]
+    files_map_file = args.files_map_file[0]
+    anomalies_output_file = args.anomalies_output_file[0]
+
+    total_time_logger = TimeLogger()
+
+    anomalies_number = anomaly_selection(files_map_file, anomalies_output_file, distances_file)
+
+    print('==============================')
+    print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
+          str(total_time_logger.finish()))
+
+elif stage == 'all':
+    dataset_file = args.dataset[0]
+    split_percent = args.split_percent[0]
+    encoding_dim_percent = args.encoding_dim_percent[0]
+    files_map_file = args.files_map_file[0]
+    anomalies_output_file = args.anomalies_output_file[0]
+    use_dbscan = args.use_dbscan
+
+    total_time_logger = TimeLogger()
+
+    differences = autoencoding(dataset_file, split_percent, encoding_dim_percent, full_differences=use_dbscan)
+
+    print('==============================')
+    print('Autoencoder finished its work. Time: ' + str(total_time_logger.finish()))
+
+    if use_dbscan:
+        total_time_logger = TimeLogger()
+
+        anomalies_number = anomaly_selection(files_map_file, anomalies_output_file, differences=differences)
+
+        print('==============================')
+        print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
+              str(total_time_logger.finish()))
+    else:
+        time_logger = TimeLogger()
+        with open(anomalies_output_file, 'w') as f:
+            differences = sorted(enumerate(differences), key=lambda tup: tup[1], reverse=True)
+            f.write(json.dumps(differences))
+        print('Write differences finished. Time: ' + str(time_logger.finish()))
