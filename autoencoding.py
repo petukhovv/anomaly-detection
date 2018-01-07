@@ -9,6 +9,31 @@ from lib.DatasetLoader import DatasetLoader
 from lib.helpers.TimeLogger import TimeLogger
 
 
+def binary_write(differences, features_number, output_file):
+    chunking_time_logger = TimeLogger()
+    differences = differences.flatten('F')
+    differences = np.append(differences, features_number)
+    differences = struct.pack('=%df' % differences.size, *differences)
+
+    chunk_size = 10000000
+    difference_chunks = funcy.chunks(chunk_size, differences)
+    print('Chunking finished. Time: ' + str(chunking_time_logger.finish()))
+
+    chunk_counter = 1
+    for difference_chunk in difference_chunks:
+        with open(output_file, 'ab') as f:
+            difference_chunk_time_logger = TimeLogger()
+            f.write(difference_chunk)
+            print('Write difference chunk ' + str(chunk_counter) + ' is done. Time: ' +
+                  str(difference_chunk_time_logger.finish()))
+            chunk_counter += 1
+
+
+def ascii_write(differences, output_file):
+    with open(output_file, 'w') as f:
+        f.write(json.dumps(differences))
+
+
 def autoencoding(dataset_file, split_percent, encoding_dim_percent, output_file=None, full_differences=None):
     time_logger = TimeLogger()
     data = DatasetLoader(dataset_file).load(split_percent=split_percent)
@@ -39,25 +64,8 @@ def autoencoding(dataset_file, split_percent, encoding_dim_percent, output_file=
     time_logger = TimeLogger()
 
     if full_differences:
-        chunking_time_logger = TimeLogger()
-        differences = differences.flatten('F')
-        differences = np.append(differences, features_number)
-        differences = struct.pack('=%df' % differences.size, *differences)
-
-        chunk_size = 10000000
-        difference_chunks = funcy.chunks(chunk_size, differences)
-        print('Chunking finished. Time: ' + str(chunking_time_logger.finish()))
-
-        chunk_counter = 1
-        for difference_chunk in difference_chunks:
-            with open(output_file, 'ab') as f:
-                difference_chunk_time_logger = TimeLogger()
-                f.write(difference_chunk)
-                print('Write difference chunk ' + str(chunk_counter) + ' is done. Time: ' +
-                      str(difference_chunk_time_logger.finish()))
-                chunk_counter += 1
+        binary_write(differences, features_number, output_file)
     else:
-        with open(output_file, 'w') as f:
-            f.write(json.dumps(differences))
+        ascii_write(differences, output_file)
 
     print('Write differences finished. Time: ' + str(time_logger.finish()))

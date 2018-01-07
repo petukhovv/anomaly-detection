@@ -7,26 +7,26 @@ from anomaly_selection import anomaly_selection
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--stage', '-s', choices=['autoencoding', 'anomaly_selection', 'all'])
+parser.add_argument('--stage', '-s', choices=['autoencoding', 'anomaly_selection'])
 parser.add_argument('--use_dbscan', action='store_true',
                     help='whether to use dbscan (high memory usage);'
                          'if not, then will use simple euclidean distance between input and output vector')
 
 # Autoencoding stage params
-parser.add_argument('--dataset', '-f', nargs=1, type=str, help='dataset file (csv format with colon delimiter)')
+parser.add_argument('--dataset', '-f', nargs=1, type=str, help='path to dataset file (csv format with colon delimiter)')
 parser.add_argument('--split_percent', nargs=1, type=float, help='dataset train/test split percent')
 parser.add_argument('--encoding_dim_percent', nargs=1, type=float,
                     help='encoding dim percent (towards features number)')
 parser.add_argument('--differences_output_file', nargs=1, type=str,
-                    help='file with decoding losses (difference between input and output)')
+                    help='path to file with input-decoded difference')
 
 # Anomaly selection stage params
 parser.add_argument('--differences_file', nargs=1, type=str,
-                    help='file with distance vectors (obtained by autoencoder)')
+                    help='path to file with distance vectors (obtained by autoencoder)')
 parser.add_argument('--files_map_file', nargs=1, type=str,
-                    help='file with map dataset indexes and ast file paths')
+                    help='path to file with map dataset indexes and ast file paths')
 parser.add_argument('--anomalies_output_file', '-o', nargs=1, type=str,
-                    help='file, which will contain anomaly list (as paths to AST code snippets)')
+                    help='path to file, which will contain anomaly list (as paths to AST code snippets)')
 
 args = parser.parse_args()
 stage = args.stage
@@ -60,7 +60,7 @@ elif stage == 'anomaly_selection':
     print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
           str(total_time_logger.finish()))
 
-elif stage == 'all':
+else:
     dataset_file = args.dataset[0]
     split_percent = args.split_percent[0]
     encoding_dim_percent = args.encoding_dim_percent[0]
