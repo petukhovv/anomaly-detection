@@ -5,7 +5,7 @@ Anomaly detection using autoencoder and dbscan (adapted for Kotlin source code a
 Available steps (stages):
 - **autoencoding**: run the autoencoder on the specified dataset, calulating and write vectors with differences (between input and output) or simple euclidean distances array;
 - **anomaly_selection**: read difference vectors or distances vector and anomaly selection in it (via DBScan or 5-sigma);
-- **all**: run of both stages without intermediate write of difference vectors or distances vector in a file.
+- **[without specify stage]**: run of both stages without intermediate write of difference vectors or distances vector in a file.
 
 ## Program use
 ### Autoencoding
