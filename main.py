@@ -22,7 +22,7 @@ parser.add_argument('--differences_output_file', nargs=1, type=str,
                     help='file with decoding losses (difference between input and output)')
 
 # Anomaly selection stage params
-parser.add_argument('--distances_file', nargs=1, type=str,
+parser.add_argument('--differences_file', nargs=1, type=str,
                     help='file with distance vectors (obtained by autoencoder)')
 parser.add_argument('--files_map_file', nargs=1, type=str,
                     help='file with map dataset indexes and ast file paths')
@@ -47,13 +47,15 @@ if stage == 'autoencoding':
     print('Autoencoder finished its work. Time: ' + str(total_time_logger.finish()))
 
 elif stage == 'anomaly_selection':
-    distances_file = args.distances_file[0]
+    differences_file = args.differences_file[0]
     files_map_file = args.files_map_file[0]
     anomalies_output_file = args.anomalies_output_file[0]
+    use_dbscan = args.use_dbscan
 
     total_time_logger = TimeLogger()
 
-    anomalies_number = anomaly_selection(files_map_file, anomalies_output_file, distances_file)
+    anomalies_number =\
+        anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differences_file=differences_file)
 
     print('==============================')
     print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
@@ -74,17 +76,10 @@ elif stage == 'all':
     print('==============================')
     print('Autoencoder finished its work. Time: ' + str(total_time_logger.finish()))
 
-    if use_dbscan:
-        total_time_logger = TimeLogger()
+    total_time_logger = TimeLogger()
 
-        anomalies_number = anomaly_selection(files_map_file, anomalies_output_file, differences=differences)
+    anomalies_number = anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differences=differences)
 
-        print('==============================')
-        print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
-              str(total_time_logger.finish()))
-    else:
-        time_logger = TimeLogger()
-        with open(anomalies_output_file, 'w') as f:
-            differences = sorted(enumerate(differences), key=lambda tup: tup[1], reverse=True)
-            f.write(json.dumps(differences))
-        print('Write differences finished. Time: ' + str(time_logger.finish()))
+    print('==============================')
+    print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
+          str(total_time_logger.finish()))
