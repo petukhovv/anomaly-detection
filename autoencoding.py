@@ -34,25 +34,27 @@ def ascii_write(differences, output_file):
 
 
 def autoencoding(dataset_file, split_percent, encoding_dim_percent, output_file=None, full_differences=None):
+    total_time_logger = TimeLogger(task_name='Autoencoder its work')
+
     time_logger = TimeLogger(task_name='Dataset loading')
     data = DatasetLoader(dataset_file).load(split_percent=split_percent)
     (_, _, features_number) = data
     encoding_dim = math.ceil(features_number * encoding_dim_percent)
-    time_logger.finish(full_finish=True)
+    time_logger.finish()
 
     time_logger = TimeLogger(task_name='Autoencoder fit')
     autoencoder = Autoencoder(features_number, encoding_dim, data)
     autoencoder.print_model_summary()
     autoencoder.fit()
-    time_logger.finish(full_finish=True)
+    time_logger.finish()
 
     time_logger = TimeLogger(task_name='Autoencoder predict')
     autoencoder.predict()
-    time_logger.finish(full_finish=True)
+    time_logger.finish()
 
     time_logger = TimeLogger(task_name='Calculate differences')
     differences = autoencoder.calc_differences(full_differences)
-    time_logger.finish(full_finish=True)
+    time_logger.finish()
 
     if not full_differences:
         differences = sorted(enumerate(differences), key=lambda tup: tup[1], reverse=True)
@@ -67,4 +69,6 @@ def autoencoding(dataset_file, split_percent, encoding_dim_percent, output_file=
     else:
         ascii_write(differences, output_file)
 
-    time_logger.finish(full_finish=True)
+    time_logger.finish()
+
+    total_time_logger.finish(full_finish=True)

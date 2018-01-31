@@ -1,6 +1,5 @@
 import argparse
-
-from lib.helpers.TimeLogger import TimeLogger
+import os
 
 from autoencoding import autoencoding
 from anomaly_selection import anomaly_selection
@@ -38,12 +37,7 @@ if stage == 'autoencoding':
     output_file = args.differences_output_file[0]
     use_dbscan = args.use_dbscan
 
-    total_time_logger = TimeLogger()
-
     autoencoding(dataset_file, split_percent, encoding_dim_percent, output_file, full_differences=use_dbscan)
-
-    print('==============================')
-    print('Autoencoder finished its work. Time: ' + str(total_time_logger.finish()))
 
 elif stage == 'anomaly_selection':
     differences_file = args.differences_file[0]
@@ -51,14 +45,11 @@ elif stage == 'anomaly_selection':
     anomalies_output_file = args.anomalies_output_file[0]
     use_dbscan = args.use_dbscan
 
-    total_time_logger = TimeLogger()
-
     anomalies_number =\
         anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differences_file=differences_file)
 
-    print('==============================')
-    print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
-          str(total_time_logger.finish()))
+    print('===================' + os.linesep)
+    print('%d anomalies found' % anomalies_number)
 
 else:
     dataset_file = args.dataset[0]
@@ -68,17 +59,9 @@ else:
     anomalies_output_file = args.anomalies_output_file[0]
     use_dbscan = args.use_dbscan
 
-    total_time_logger = TimeLogger()
-
     differences = autoencoding(dataset_file, split_percent, encoding_dim_percent, full_differences=use_dbscan)
-
-    print('==============================')
-    print('Autoencoder finished its work. Time: ' + str(total_time_logger.finish()))
-
-    total_time_logger = TimeLogger()
 
     anomalies_number = anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differences=differences)
 
-    print('==============================')
-    print('Anomalies selection completed. ' + str(anomalies_number) + ' anomalies found. Time: ' +
-          str(total_time_logger.finish()))
+    print('===================' + os.linesep)
+    print('%d anomalies found' % anomalies_number)

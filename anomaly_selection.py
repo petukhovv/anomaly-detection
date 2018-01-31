@@ -51,10 +51,10 @@ def ascii_read(differences_file):
 
 
 def dbscan_anomaly_selection(differences):
-    dbscan_time_logger = TimeLogger('DBSCAN its work')
+    dbscan_time_logger = TimeLogger(task_name='DBSCAN its work')
     labels = DBSCAN(eps=3, min_samples=5, metric='euclidean').fit_predict(differences)
     anomaly_indexes = [i for i, x in enumerate(labels) if x == -1]
-    dbscan_time_logger.finish(full_finish=True)
+    dbscan_time_logger.finish()
 
     return anomaly_indexes
 
@@ -73,12 +73,14 @@ def three_sigma_anomaly_selection(differences):
         if x < left_bound_3_sigma or x > right_bound_3_sigma:
             anomalies.append((difference_indexes[i], difference_values[i]))
 
-    three_sigma_time_logger.finish(full_finish=True)
+    three_sigma_time_logger.finish()
 
     return anomalies
 
 
 def anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differences_file=None, differences=None):
+    total_time_logger = TimeLogger(task_name='Anomalies selection')
+
     if differences_file:
         if use_dbscan:
             differences = binary_read(differences_file)
@@ -104,6 +106,8 @@ def anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differe
         with open(anomalies_output_file, 'w') as anomalies_output_file_descriptor:
             anomalies_output_file_descriptor.write(json.dumps(anomaly_files))
 
-    anomalies_write_time_logger.finish(full_finish=True)
+    anomalies_write_time_logger.finish()
+
+    total_time_logger.finish(full_finish=True)
 
     return len(anomaly_files)
