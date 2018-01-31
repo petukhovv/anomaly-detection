@@ -4,7 +4,7 @@ import json
 
 from sklearn.cluster import DBSCAN
 
-from lib.helpers.TimeLogger import TimeLogger
+from .lib.helpers.TimeLogger import TimeLogger
 
 
 def binary_read(differences_file):

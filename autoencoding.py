@@ -4,9 +4,9 @@ import json
 import struct
 import numpy as np
 
-from lib.Autoencoder import Autoencoder
-from lib.DatasetLoader import DatasetLoader
-from lib.helpers.TimeLogger import TimeLogger
+from .lib.Autoencoder import Autoencoder
+from .lib.DatasetLoader import DatasetLoader
+from .lib.helpers.TimeLogger import TimeLogger
 
 
 def binary_write(differences, features_number, output_file):
