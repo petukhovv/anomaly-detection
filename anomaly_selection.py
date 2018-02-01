@@ -59,21 +59,21 @@ def dbscan_anomaly_selection(differences):
     return anomaly_indexes
 
 
-def three_sigma_anomaly_selection(differences):
-    three_sigma_time_logger = TimeLogger('3-sigma anomaly selection')
+def deviation_anomaly_selection(differences, sigma_deviation_bound=3):
+    time_logger = TimeLogger('%s-sigma anomaly selection' % sigma_deviation_bound)
 
     difference_indexes, difference_values = differences
     mean = np.mean(difference_values)
     std_deviation = np.std(difference_values)
-    left_bound_3_sigma = mean - 3 * std_deviation
-    right_bound_3_sigma = mean + 3 * std_deviation
+    left_bound_deviation = mean - sigma_deviation_bound * std_deviation
+    right_bound_deviation = mean + sigma_deviation_bound * std_deviation
 
     anomalies = []
     for i, x in enumerate(difference_values):
-        if x < left_bound_3_sigma or x > right_bound_3_sigma:
+        if x < left_bound_deviation or x > right_bound_deviation:
             anomalies.append((difference_indexes[i], difference_values[i]))
 
-    three_sigma_time_logger.finish()
+    time_logger.finish()
 
     return anomalies
 
@@ -90,7 +90,7 @@ def anomaly_selection(files_map_file, anomalies_output_file, use_dbscan, differe
     if use_dbscan:
         anomalies = dbscan_anomaly_selection(differences)
     else:
-        anomalies = three_sigma_anomaly_selection(differences)
+        anomalies = deviation_anomaly_selection(differences)
 
     anomalies_write_time_logger = TimeLogger('Anomaly list write')
     with open(files_map_file) as files_map_file_descriptor:
