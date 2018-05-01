@@ -7,6 +7,7 @@ class TimeLogger:
         self.task_name = task_name
         self.start_time = time.time()
         self.accuracy = accuracy
+        print('Start %s' % task_name)
 
     def finish(self, full_finish=False):
         seconds = round(time.time() - self.start_time, self.accuracy)
