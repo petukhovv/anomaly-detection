@@ -54,6 +54,8 @@ class Autoencoder:
         self.model.get_autoencoder().fit(self.train_data, self.train_data,
                                          epochs=epochs,
                                          shuffle=shuffle,
+                                         verbose=2,
+                                         batch_size=1024,
                                          validation_data=(self.all_data, self.all_data))
 
     def predict(self):
@@ -67,7 +69,7 @@ class Autoencoder:
             if full_differences:
                 difference_element = np.divide(np.power(item - self.all_data[item_index], 2), samples_number)
             else:
-                difference_element = distance.euclidean(item, self.all_data[item_index])
+                difference_element = distance.euclidean(item, self.all_data[item_index]) / len(self.all_data[item_index])
             difference.append(difference_element)
             item_index += 1
 
